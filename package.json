@@ -2,11 +2,11 @@
   "name": "peter-gallery",
   "version": "1.0.0",
   "private": true,
-  "description": "个人摄影作品网站：把照片放进 images/ 文件夹即可自动展示",
+  "description": "个人摄影作品网站：静态站，构建时扫描 images/ 生成 webp 与照片清单，由 GitHub Pages 托管",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "build": "node scripts/build-static.js",
+    "preview": "node server.js",
     "import": "node scripts/import-photos.js"
   },
   "engines": {

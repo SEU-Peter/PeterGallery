@@ -1,5 +1,9 @@
 /* ==========================================================================
    PeterGallery · 前端逻辑
+
+   纯静态：数据来自构建时生成的 photos.json，图片是 _site/media/ 下的 webp。
+   所有路径都用相对路径，这样部署在 GitHub Pages 的子路径
+   （https://<用户名>.github.io/PeterGallery/）下也能正常工作。
    ========================================================================== */
 
 (() => {
@@ -23,7 +27,7 @@
   const lbStage = document.getElementById('lbStage');
 
   /** 网格尺寸，用于计算瀑布流高度 */
-  let metrics = { colWidth: 0, gap: 14, rowUnit: 4 };
+  let metrics = { colWidth: 0, gap: 14, rowUnit: 1 };
 
   /** 当前展示的照片列表（受相册筛选影响） */
   let photos = [];
@@ -37,13 +41,16 @@
 
     let data;
     try {
-      const res = await fetch('/api/photos');
+      // 相对路径：构建时由 scripts/build-static.js 生成
+      const res = await fetch('photos.json');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       data = await res.json();
     } catch (err) {
       empty.hidden = false;
       empty.querySelector('h2').textContent = '加载失败';
-      empty.querySelector('p').textContent = `无法读取照片数据：${err.message}`;
+      empty.querySelector('p').innerHTML =
+        `无法读取照片数据（${escapeHtml(err.message)}）。<br />` +
+        '如果本地预览，请先执行 <code>npm run build</code>，再用 <code>npm run preview</code> 打开。';
       return;
     }
 
@@ -80,7 +87,7 @@
 
   function setHero(photo) {
     const bg = document.getElementById('heroBg');
-    const url = `/api/image?p=${encodeURIComponent(photo.rel)}&w=2000&fit=cover`;
+    const url = photo.large;
     const img = new Image();
     img.onload = () => {
       bg.style.backgroundImage = `url("${url}")`;
@@ -168,7 +175,7 @@
       img.alt = photo.title || '';
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.src = `/api/image?p=${encodeURIComponent(photo.rel)}&w=800&fit=inside`;
+      img.src = photo.thumb;
       img.addEventListener('load', () => {
         img.classList.add('is-loaded');
         card.classList.add('is-loaded-card');
@@ -271,7 +278,7 @@
     lbIndexEl.textContent = `${lbIndex + 1} / ${lbList.length}`;
     renderExif(photo.exif);
 
-    const url = `/api/image?p=${encodeURIComponent(photo.rel)}&w=2000&fit=inside`;
+    const url = photo.large;
     const pre = new Image();
     pre.onload = () => {
       lbImage.src = url;
@@ -301,7 +308,7 @@
   function preload(index) {
     const photo = lbList[index];
     if (!photo) return;
-    new Image().src = `/api/image?p=${encodeURIComponent(photo.rel)}&w=2000&fit=inside`;
+    new Image().src = photo.large;
   }
 
   function step(delta) {
