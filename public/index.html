@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PETER GALLERY · 摄影作品集</title>
+<meta name="description" content="个人摄影作品集" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <a class="brand" href="#top">
+      <span class="brand-dot"></span>
+      <span class="brand-text" id="brandText">PETER GALLERY</span>
+    </a>
+    <nav class="header-nav">
+      <a href="#gallery">作品</a>
+      <a href="#about">关于</a>
+    </nav>
+  </div>
+</header>
+
+<!-- 首屏 -->
+<section class="hero" id="top">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-veil"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow" id="heroAuthor">Peter</p>
+    <h1 class="hero-title" id="heroTitle">PETER<br />GALLERY</h1>
+    <p class="hero-tagline" id="heroTagline">光与影的私人收藏</p>
+  </div>
+  <a class="scroll-cue" href="#gallery">
+    <span>向下浏览</span>
+    <span class="scroll-line"></span>
+  </a>
+</section>
+
+<!-- 作品区 -->
+<main class="gallery-wrap" id="gallery">
+  <div class="toolbar" id="toolbar">
+    <div class="toolbar-inner">
+      <div class="chips" id="chips"></div>
+      <div class="toolbar-side">
+        <button class="chips-toggle" id="chipsToggle" type="button" hidden></button>
+        <p class="counter" id="counter"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <!-- 空状态 -->
+  <div class="empty" id="empty" hidden>
+    <h2>还没有照片</h2>
+    <p>把照片文件放进项目根目录的 <code>images/</code> 文件夹，刷新页面即可自动展示。</p>
+    <p class="empty-hint">
+      <code>images/京都之行/DSC_0001.jpg</code> → 会归入「京都之行」相册<br />
+      <code>images/DSC_0002.jpg</code> → 归入「未分类」
+    </p>
+  </div>
+</main>
+
+<!-- 关于 -->
+<section class="about" id="about">
+  <div class="about-inner">
+    <p class="about-label">关于</p>
+    <h2 class="about-title">用一张照片，<br />记住一段时间。</h2>
+    <p class="about-text">
+      这里是我个人的摄影收藏，按拍摄批次整理成相册。<br />
+      所有作品均为本人拍摄，请勿用于商业用途。
+    </p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>© <span id="year"></span> <span id="footerAuthor">Peter</span> · 保留所有权利</p>
+</footer>
+
+<!-- 灯箱 -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" aria-label="关闭">&times;</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="上一张">&#8249;</button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="下一张">&#8250;</button>
+
+  <figure class="lb-figure">
+    <div class="lb-stage" id="lbStage">
+      <img id="lbImage" alt="" />
+    </div>
+    <figcaption class="lb-caption">
+      <div class="lb-caption-main">
+        <p class="lb-title" id="lbTitle"></p>
+        <p class="lb-album" id="lbAlbum"></p>
+      </div>
+      <div class="lb-exif" id="lbExif"></div>
+      <p class="lb-index" id="lbIndex"></p>
+    </figcaption>
+  </figure>
+  <div class="lb-loader" id="lbLoader"></div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
