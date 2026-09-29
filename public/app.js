@@ -198,9 +198,14 @@
 
       const meta = document.createElement('figcaption');
       meta.className = 'card-meta';
-      const sub = photo.exif && photo.exif.camera ? photo.exif.camera : photo.album;
+      // 相机名与相册名各占一个胶囊标签；没有相机信息时只显示相册
+      const camera = photo.exif && photo.exif.camera;
+      const tags = [
+        camera ? `<span class="card-tag">${escapeHtml(camera)}</span>` : '',
+        `<span class="card-tag">${escapeHtml(photo.album)}</span>`,
+      ].join('');
       meta.innerHTML = `<p class="card-title">${escapeHtml(photo.title)}</p>
-        <p class="card-sub">${escapeHtml(sub || '')}</p>`;
+        <div class="card-tags">${tags}</div>`;
 
       card.append(img, meta);
       card.addEventListener('click', () => openLightbox(list.indexOf(photo)));
