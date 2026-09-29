@@ -62,8 +62,8 @@
       return;
     }
 
-    // 首屏背景图由构建脚本按配置指定（site.hero），缺失时回退到第一张
-    setHero(data.hero || (data.photos[0] && data.photos[0].large));
+    // 首屏背景每次刷新随机挑一张
+    setHero(pickHero(photos)?.large);
     renderChips(data.albums || []);
     renderGrid();
   }
@@ -84,6 +84,18 @@
       document.getElementById('footerAuthor').textContent = site.author;
     }
     if (site.tagline) document.getElementById('heroTagline').textContent = site.tagline;
+  }
+
+  /**
+   * 首屏背景图：每次刷新随机挑一张。
+   * 只从横幅照片里挑——首屏容器很宽（约 2:1），竖幅照片用 cover 会被裁成一条，
+   * 基本看不出内容。若一张横幅都没有则退回全部照片。
+   */
+  function pickHero(list) {
+    if (!list.length) return null;
+    const landscape = list.filter((p) => p.width >= p.height);
+    const pool = landscape.length ? landscape : list;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function setHero(url) {

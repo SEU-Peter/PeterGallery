@@ -46,12 +46,6 @@ const SITE = {
 };
 
 /**
- * 首屏背景使用的照片，按「相册名 + 文件名（不含扩展名）」指定。
- * 找不到时会回退到第一张照片，并在构建日志里提示。
- */
-const HERO = { album: '东南大学九龙湖', title: 'DSC_0985' };
-
-/**
  * 两档输出尺寸。
  *
  * thumb：网格卡片宽度固定约 350px，所以按「宽度」缩放到 800px——
@@ -340,25 +334,10 @@ async function build() {
   // 防止 GitHub Pages 用 Jekyll 处理（服务端产物的兜底保护）
   await fsp.writeFile(path.join(OUT_DIR, '.nojekyll'), '');
 
-  // 首屏背景图：按配置查找，找不到就回退到第一张
-  let hero = entries.length ? entries[0].files.large : null;
-  let heroLabel = entries.length ? `${entries[0].album}/${entries[0].title}` : '（无照片）';
-  if (entries.length && HERO) {
-    const matched = entries.find((e) => e.album === HERO.album && e.title === HERO.title)
-      || entries.find((e) => e.title === HERO.title);
-    if (matched) {
-      hero = matched.files.large;
-      heroLabel = `${matched.album}/${matched.title}`;
-    } else {
-      console.warn(`\n  提示：首屏配置的照片 ${HERO.album}/${HERO.title} 不存在，已回退到 ${heroLabel}\n`);
-    }
-  }
-
-  // 照片清单
+  // 照片清单。首屏背景不在这里固定，由前端每次刷新随机挑一张横幅照片。
   const manifest = {
     site: SITE,
     generatedAt: new Date().toISOString(),
-    hero,
     albums,
     photos: entries.map(({ id, album, title, width, height, exif, files }) => ({
       id, album, title, width, height, exif,
@@ -372,7 +351,7 @@ async function build() {
   console.log('');
   console.log('─'.repeat(52));
   console.log(`照片 ${entries.length} 张 · 相册 ${albums.length} 个`);
-  console.log(`首屏背景 ${heroLabel}`);
+  console.log('首屏背景 每次刷新随机挑一张横幅照片');
   console.log(`生成 ${stats.generated} 个文件 · 跳过 ${stats.skipped} 个（未变化）${stats.failed ? ` · 失败 ${stats.failed} 个` : ''}`);
   if (removed) console.log(`清理陈旧产物 ${removed} 个`);
   console.log(`图片体积 ${formatSize(totalBytes)} · 耗时 ${seconds}s`);
