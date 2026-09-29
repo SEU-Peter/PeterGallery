@@ -598,6 +598,10 @@ code {
   vertical-align: middle;
 }
 
+/* 拍摄时间用暖色区分于光学参数 */
+.lb-exif .lb-date { color: var(--accent); }
+.lb-exif .lb-date::before { background: var(--accent); }
+
 .lb-index {
   margin: 0;
   font-size: 11px;
@@ -683,12 +687,33 @@ code {
   .toolbar-inner { flex-direction: column; align-items: stretch; gap: 12px; }
   .toolbar-side { justify-content: space-between; }
   .about { padding: 90px 20px; }
-  .lightbox { padding: 56px 12px 16px; }
+  .lightbox { padding: 52px 12px 14px; }
   .lb-nav { width: 44px; height: 44px; font-size: 26px; }
   .lb-prev { left: 8px; }
   .lb-next { right: 8px; }
-  .lb-caption { padding-top: 14px; gap: 12px; }
-  .lb-exif { display: none; }
+  /* 手机上卡片没有 hover，详细信息只能靠灯箱，所以这里不能像以前那样隐藏 EXIF，
+     改成「标题+序号」一行、EXIF 换行铺开的紧凑纵向排布 */
+  .lb-caption {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main index"
+      "exif exif";
+    align-items: baseline;
+    gap: 6px 12px;
+    padding-top: 12px;
+  }
+  .lb-caption-main { grid-area: main; min-width: 0; }
+  .lb-title { font-size: 13px; }
+  .lb-album { margin-top: 3px; font-size: 10px; letter-spacing: 0.18em; }
+  .lb-exif {
+    grid-area: exif;
+    gap: 4px 12px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .lb-exif span::before { width: 3px; height: 3px; margin-right: 6px; }
+  .lb-index { grid-area: index; font-size: 10px; letter-spacing: 0.18em; }
 }
 
 @media (prefers-reduced-motion: reduce) {

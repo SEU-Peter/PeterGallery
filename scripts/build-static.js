@@ -46,6 +46,12 @@ const SITE = {
 };
 
 /**
+ * 首屏背景使用的照片，按「相册名 + 文件名（不含扩展名）」指定。
+ * 找不到时会回退到第一张照片，并在构建日志里提示。
+ */
+const HERO = { album: '东南大学九龙湖', title: 'DSC_0985' };
+
+/**
  * 两档输出尺寸。
  *
  * thumb：网格卡片宽度固定约 350px，所以按「宽度」缩放到 800px——
@@ -96,6 +102,13 @@ function cleanExif(image, photo) {
 
   const iso = ph.ISOSpeedRatings ?? ph.ISO ?? ph.PhotographicSensitivity ?? ph.RecommendedExposureIndex;
   if (iso) out.iso = `ISO ${Array.isArray(iso) ? iso[0] : iso}`;
+
+  // 拍摄时间。注意：exif-reader 把 EXIF 里的时间字符串（相机的当地时间）按 UTC 解析，
+  // 所以必须用 UTC 取值输出，否则会被系统时区再偏移一次（例如 +08:00 会变成 22:46）。
+  const shotAt = ph.DateTimeOriginal || ph.DateTimeDigitized;
+  if (shotAt instanceof Date && !Number.isNaN(shotAt.getTime())) {
+    out.date = shotAt.toISOString().slice(0, 16).replace('T', ' ');
+  }
 
   return Object.keys(out).length ? out : null;
 }
@@ -174,6 +187,14 @@ async function discoverPhotos() {
   const albums = [...counts.entries()]
     .map(([name, count]) => ({ id: name, name, count }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans-CN'));
+
+  // 「全部」视图按相册分组展示，相册顺序与筛选栏一致（照片多的在前），
+  // 相册内按文件名自然排序。这样在「全部」里浏览时一个相册是连着的。
+  const albumOrder = new Map(albums.map((a, index) => [a.name, index]));
+  photos.sort((a, b) => (
+    albumOrder.get(a.album) - albumOrder.get(b.album)
+    || a.title.localeCompare(b.title, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' })
+  ));
 
   return { photos, albums };
 }
@@ -269,11 +290,10 @@ async function build() {
   await runPool(tasks, CONCURRENCY, async ({ entry, size }) => {
     const dest = path.join(OUT_DIR, entry.files[size.key]);
 
-    if (!force && await isUpToDate(entry.absPath, dest)) {
-      stats.skipped++;
-      totalBytes += (await fsp.stat(dest)).size;
-    } else {
-      try {
+    try {
+      if (!force && await isUpToDate(entry.absPath, dest)) {
+        stats.skipped++;
+      } else {
         await sharp(entry.absPath)
           .rotate() // 按 EXIF 方向摆正，并把方向标记归一为 1
           .resize({ ...size.resize, withoutEnlargement: true })
@@ -281,11 +301,15 @@ async function build() {
           .webp({ quality: size.quality })
           .toFile(dest);
         stats.generated++;
-        totalBytes += (await fsp.stat(dest)).size;
-      } catch (err) {
-        stats.failed++;
-        console.error(`\n  失败   ${entry.title} (${size.key})：${err.message}`);
       }
+
+      // 必须先 await 拿到值再累加。写成 `total += (await ...)` 会因为复合赋值先读左值、
+      // 而 await 期间其它并发任务也读同一个旧值并写回，导致统计被覆盖、结果忽大忽小。
+      const bytes = (await fsp.stat(dest)).size;
+      totalBytes += bytes;
+    } catch (err) {
+      stats.failed++;
+      console.error(`\n  失败   ${entry.title} (${size.key})：${err.message}`);
     }
 
     processed++;
@@ -316,10 +340,25 @@ async function build() {
   // 防止 GitHub Pages 用 Jekyll 处理（服务端产物的兜底保护）
   await fsp.writeFile(path.join(OUT_DIR, '.nojekyll'), '');
 
+  // 首屏背景图：按配置查找，找不到就回退到第一张
+  let hero = entries.length ? entries[0].files.large : null;
+  let heroLabel = entries.length ? `${entries[0].album}/${entries[0].title}` : '（无照片）';
+  if (entries.length && HERO) {
+    const matched = entries.find((e) => e.album === HERO.album && e.title === HERO.title)
+      || entries.find((e) => e.title === HERO.title);
+    if (matched) {
+      hero = matched.files.large;
+      heroLabel = `${matched.album}/${matched.title}`;
+    } else {
+      console.warn(`\n  提示：首屏配置的照片 ${HERO.album}/${HERO.title} 不存在，已回退到 ${heroLabel}\n`);
+    }
+  }
+
   // 照片清单
   const manifest = {
     site: SITE,
     generatedAt: new Date().toISOString(),
+    hero,
     albums,
     photos: entries.map(({ id, album, title, width, height, exif, files }) => ({
       id, album, title, width, height, exif,
@@ -333,6 +372,7 @@ async function build() {
   console.log('');
   console.log('─'.repeat(52));
   console.log(`照片 ${entries.length} 张 · 相册 ${albums.length} 个`);
+  console.log(`首屏背景 ${heroLabel}`);
   console.log(`生成 ${stats.generated} 个文件 · 跳过 ${stats.skipped} 个（未变化）${stats.failed ? ` · 失败 ${stats.failed} 个` : ''}`);
   if (removed) console.log(`清理陈旧产物 ${removed} 个`);
   console.log(`图片体积 ${formatSize(totalBytes)} · 耗时 ${seconds}s`);

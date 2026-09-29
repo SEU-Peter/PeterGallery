@@ -62,7 +62,8 @@
       return;
     }
 
-    setHero(data.photos[0]);
+    // 首屏背景图由构建脚本按配置指定（site.hero），缺失时回退到第一张
+    setHero(data.hero || (data.photos[0] && data.photos[0].large));
     renderChips(data.albums || []);
     renderGrid();
   }
@@ -85,9 +86,9 @@
     if (site.tagline) document.getElementById('heroTagline').textContent = site.tagline;
   }
 
-  function setHero(photo) {
+  function setHero(url) {
+    if (!url) return;
     const bg = document.getElementById('heroBg');
-    const url = photo.large;
     const img = new Image();
     img.onload = () => {
       bg.style.backgroundImage = `url("${url}")`;
@@ -298,10 +299,11 @@
       lbExif.innerHTML = '';
       return;
     }
-    const order = ['camera', 'lens', 'focal', 'aperture', 'shutter', 'iso'];
+    // date 放最后并单独给个样式，和光学参数区分开
+    const order = ['camera', 'lens', 'focal', 'aperture', 'shutter', 'iso', 'date'];
     lbExif.innerHTML = order
       .filter((k) => exif[k])
-      .map((k) => `<span>${escapeHtml(exif[k])}</span>`)
+      .map((k) => `<span${k === 'date' ? ' class="lb-date"' : ''}>${escapeHtml(exif[k])}</span>`)
       .join('');
   }
 
