@@ -126,14 +126,14 @@ code {
   transition: opacity 1.4s ease;
 }
 
-.hero-bg.is-ready { opacity: 0.5; }
+.hero-bg.is-ready { opacity: 0.62; }
 
 .hero-veil {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 90% at 15% 20%, rgba(10, 10, 11, 0.35) 0%, rgba(10, 10, 11, 0.92) 70%),
-    linear-gradient(to bottom, rgba(10, 10, 11, 0.6) 0%, rgba(10, 10, 11, 0.2) 40%, var(--bg) 100%);
+    radial-gradient(120% 90% at 15% 20%, rgba(10, 10, 11, 0.18) 0%, rgba(10, 10, 11, 0.76) 72%),
+    linear-gradient(to bottom, rgba(10, 10, 11, 0.42) 0%, rgba(10, 10, 11, 0.08) 40%, var(--bg) 100%);
 }
 
 .hero-content {
@@ -201,6 +201,99 @@ code {
   margin: 0 auto;
   padding: 0 32px 120px;
 }
+
+.gallery-section,
+.all-work { margin-top: 112px; }
+
+.featured { margin-top: 0; }
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.36em;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.section-link {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+
+.section-link:hover { color: var(--text); }
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.featured-grid .card {
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 0;
+}
+
+/* 精选区使用一致的画幅裁切，保证横竖构图混排时行列整齐。 */
+.featured-grid .card img { object-fit: cover; }
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.album-card {
+  position: relative;
+  min-height: 260px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.album-card img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.album-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.05) 70%);
+}
+
+.album-card:hover img { transform: scale(1.045); }
+
+.album-card-info { position: absolute; inset: auto 18px 16px; z-index: 1; }
+.album-card-name { display: block; font-size: 17px; font-weight: 400; letter-spacing: 0.06em; }
+.album-card-count { display: block; margin-top: 4px; color: rgba(255,255,255,.65); font-size: 11px; letter-spacing: .18em; }
 
 .toolbar {
   position: sticky;
@@ -336,6 +429,10 @@ code {
   border-radius: var(--radius);
   background: var(--surface);
   cursor: zoom-in;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  text-align: left;
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
@@ -373,6 +470,15 @@ code {
 
 .card:hover img { transform: scale(1.045); }
 
+.card:focus-visible,
+.album-card:focus-visible,
+.chip:focus-visible,
+.chips-toggle:focus-visible,
+.section-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .card-meta {
   position: absolute;
   inset: auto 0 0 0;
@@ -390,6 +496,7 @@ code {
 }
 
 .card-title {
+  display: block;
   margin: 0;
   font-size: 13px;
   letter-spacing: 0.06em;
@@ -500,6 +607,24 @@ code {
   color: var(--muted);
   line-height: 2;
 }
+
+.contact {
+  margin-top: 72px;
+  padding-top: 38px;
+  border-top: 1px solid var(--line);
+}
+
+.contact-text { margin: 0; color: var(--muted); }
+.contact-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.contact-links a {
+  padding: 7px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 100px;
+  font-size: 12px;
+  letter-spacing: .1em;
+  transition: background .2s ease, border-color .2s ease;
+}
+.contact-links a:hover { background: rgba(255,255,255,.08); border-color: var(--text); }
 
 /* --------------------------------- 页脚 --------------------------------- */
 
@@ -699,6 +824,15 @@ code {
   .header-nav { gap: 20px; }
   .hero { padding: 0 20px; }
   .gallery-wrap { padding: 0 20px 80px; }
+  .gallery-section, .all-work { margin-top: 76px; }
+  .featured { margin-top: 0; }
+  .section-heading { align-items: flex-start; margin-bottom: 20px; }
+  .section-heading h2 { font-size: 1.3rem; }
+  .section-link { padding-top: 6px; font-size: 11px; }
+  .featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .featured-grid .card { min-height: 0; margin-bottom: 0; }
+  .album-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .album-card { min-height: 180px; }
   .toolbar { top: 57px; }
   /* 用 stretch 而不是 flex-start：否则 .chips 会按内容宽度撑开，导致横向溢出 */
   .toolbar-inner { flex-direction: column; align-items: stretch; gap: 12px; }

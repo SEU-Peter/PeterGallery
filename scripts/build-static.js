@@ -43,6 +43,34 @@ const SITE = {
   author: 'Peter',
   tagline: '光与影的私人收藏',
   description: '个人摄影作品集',
+  // 精选作品按「相册名/文件名」填写。这里先放了一组跨相册的初始编排；
+  // 之后只需调整这个数组，不必修改前端代码。留空则不显示精选区。
+  featured: [
+    '中学校园/PANA1593.jpg',
+    '鱼嘴公园/PANA0707.jpg',
+    '鱼嘴公园/PANA0792.jpg',
+    '南湖东路/PANA1798.jpg',
+    '南湖东路/PANA1813.jpg',
+    '南湖东路/PANA1825.jpg',
+    '莫愁湖公园/PANA1436.jpg',
+    '春节大纵湖/PANA2544.jpg',
+    '春节大纵湖/PANA2601.jpg',
+    '东南大学九龙湖/DSC_0985.jpg',
+    '东南大学九龙湖/PANA2745.jpg',
+    '方山定林寺/PANA1968.jpg',
+    '毗卢寺/PANA1101.jpg',
+    '盐城/PANA1644.jpg',
+    '玄武湖/PANA1247.jpg',
+    '长江大桥/PANA1909.jpg',
+    '长江大桥/PANA1945.jpg',
+    '赛车模型/PANA2388.jpg',
+  ],
+  // 请在准备好后填写真实联系方式；为空时页面只展示联系邀请，不展示无效链接。
+  contact: {
+    intro: '欢迎就摄影、项目合作与交流来信。',
+    email: '',
+    links: [], // 例：{ label: '小红书', url: 'https://www.xiaohongshu.com/...' }
+  },
 };
 
 /**
@@ -150,7 +178,12 @@ async function discoverPhotos() {
   const collect = async (dir, albumName) => {
     const files = await listImagesIn(dir);
     for (const file of files) {
-      photos.push({ absPath: path.join(dir, file), album: albumName, title: file.replace(/\.[^.]+$/, '') });
+      photos.push({
+        absPath: path.join(dir, file),
+        source: path.relative(IMAGES_DIR, path.join(dir, file)).split(path.sep).join('/'),
+        album: albumName,
+        title: file.replace(/\.[^.]+$/, ''),
+      });
     }
   };
 
@@ -265,6 +298,7 @@ async function build() {
     entries.push({
       id,
       absPath: item.absPath,
+      source: item.source,
       album: item.album,
       title: item.title,
       width: swapped ? meta.height : meta.width,
@@ -339,8 +373,8 @@ async function build() {
     site: SITE,
     generatedAt: new Date().toISOString(),
     albums,
-    photos: entries.map(({ id, album, title, width, height, exif, files }) => ({
-      id, album, title, width, height, exif,
+    photos: entries.map(({ id, source, album, title, width, height, exif, files }) => ({
+      id, source, album, title, width, height, exif,
       thumb: files.thumb,
       large: files.large,
     })),

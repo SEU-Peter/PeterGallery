@@ -16,6 +16,12 @@
   const counter = document.getElementById('counter');
   const empty = document.getElementById('empty');
   const header = document.getElementById('siteHeader');
+  const featured = document.getElementById('featured');
+  const featuredGrid = document.getElementById('featuredGrid');
+  const albums = document.getElementById('albums');
+  const albumGrid = document.getElementById('albumGrid');
+  const contactIntro = document.getElementById('contactIntro');
+  const contactLinks = document.getElementById('contactLinks');
 
   const lightbox = document.getElementById('lightbox');
   const lbImage = document.getElementById('lbImage');
@@ -31,6 +37,7 @@
 
   /** 当前展示的照片列表（受相册筛选影响） */
   let photos = [];
+  let siteConfig = {};
   const ALBUM_ALL = '__all__';
   let activeAlbum = ALBUM_ALL;
 
@@ -64,26 +71,49 @@
 
     // 首屏背景每次刷新随机挑一张
     setHero(pickHero(photos)?.large);
+    renderFeatured();
+    renderAlbums(data.albums || []);
     renderChips(data.albums || []);
     renderGrid();
   }
 
   function applySite(site) {
-    if (!site) return;
-    if (site.title) {
-      document.getElementById('brandText').textContent = site.title;
-      document.title = `${site.title} · ${site.description || '摄影作品集'}`;
+    siteConfig = site || {};
+    if (siteConfig.title) {
+      document.getElementById('brandText').textContent = siteConfig.title;
+      document.title = `${siteConfig.title} · ${siteConfig.description || '摄影作品集'}`;
       // 首屏大标题支持用换行拆成多行
-      const parts = String(site.title).trim().split(/\s+/);
+      const parts = String(siteConfig.title).trim().split(/\s+/);
       document.getElementById('heroTitle').innerHTML = parts.length > 1
         ? parts.map((p) => escapeHtml(p)).join('<br />')
-        : escapeHtml(site.title);
+        : escapeHtml(siteConfig.title);
     }
-    if (site.author) {
-      document.getElementById('heroAuthor').textContent = site.author;
-      document.getElementById('footerAuthor').textContent = site.author;
+    if (siteConfig.author) {
+      document.getElementById('heroAuthor').textContent = siteConfig.author;
+      document.getElementById('footerAuthor').textContent = siteConfig.author;
     }
-    if (site.tagline) document.getElementById('heroTagline').textContent = site.tagline;
+    if (siteConfig.tagline) document.getElementById('heroTagline').textContent = siteConfig.tagline;
+    renderContact(siteConfig.contact);
+  }
+
+  function renderContact(contact = {}) {
+    if (contact.intro) contactIntro.textContent = contact.intro;
+    const links = [];
+    if (contact.email) links.push({ label: contact.email, url: `mailto:${contact.email}` });
+    if (Array.isArray(contact.links)) links.push(...contact.links);
+
+    contactLinks.innerHTML = '';
+    links.filter((link) => link && link.label && link.url).forEach((link) => {
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.textContent = link.label;
+      if (/^https?:\/\//i.test(link.url)) {
+        a.target = '_blank';
+        a.rel = 'noreferrer';
+      }
+      contactLinks.appendChild(a);
+    });
+    contactLinks.hidden = !contactLinks.children.length;
   }
 
   /**
@@ -109,6 +139,54 @@
     img.src = url;
   }
 
+  /* -------------------------- 精选与相册入口 -------------------------- */
+
+  function featuredPhotos() {
+    const selected = new Map(photos.map((photo) => [photo.source, photo]));
+    return (siteConfig.featured || []).map((source) => selected.get(source)).filter(Boolean);
+  }
+
+  function renderFeatured() {
+    const list = featuredPhotos();
+    featuredGrid.innerHTML = '';
+    featured.hidden = !list.length;
+    list.forEach((photo, index) => {
+      const card = createPhotoCard(photo, () => openLightbox(index, list), false);
+      featuredGrid.appendChild(card);
+      revealObserver.observe(card);
+    });
+  }
+
+  function renderAlbums(albumList) {
+    albumGrid.innerHTML = '';
+    albums.hidden = !albumList.length;
+    albumList.forEach((album) => {
+      const cover = photos.find((photo) => photo.album === album.id);
+      if (!cover) return;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'album-card';
+      card.setAttribute('aria-label', `浏览相册：${album.name}，共 ${album.count} 张`);
+
+      const image = document.createElement('img');
+      image.src = cover.thumb;
+      image.alt = '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+
+      const info = document.createElement('span');
+      info.className = 'album-card-info';
+      info.innerHTML = `<span class="album-card-name">${escapeHtml(album.name)}</span>
+        <span class="album-card-count">${album.count} 张作品</span>`;
+      card.append(image, info);
+      card.addEventListener('click', () => {
+        setActiveAlbum(album.id);
+        document.getElementById('allWork').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      albumGrid.appendChild(card);
+    });
+  }
+
   function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, (c) => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -129,13 +207,10 @@
       const btn = document.createElement('button');
       btn.className = 'chip' + (album.id === activeAlbum ? ' is-active' : '');
       btn.type = 'button';
+      btn.dataset.albumId = album.id;
       btn.innerHTML = `${escapeHtml(album.name)}<span class="chip-count">${album.count}</span>`;
       btn.addEventListener('click', () => {
-        if (activeAlbum === album.id) return;
-        activeAlbum = album.id;
-        [...chips.children].forEach((c) => c.classList.remove('is-active'));
-        btn.classList.add('is-active');
-        renderGrid();
+        setActiveAlbum(album.id);
       });
       chips.appendChild(btn);
     });
@@ -172,43 +247,22 @@
     return activeAlbum === ALBUM_ALL ? photos : photos.filter((p) => p.album === activeAlbum);
   }
 
+  function setActiveAlbum(albumId) {
+    if (activeAlbum === albumId) return;
+    activeAlbum = albumId;
+    [...chips.children].forEach((chip) => {
+      chip.classList.toggle('is-active', chip.dataset.albumId === albumId);
+    });
+    renderGrid();
+  }
+
   function renderGrid() {
     const list = currentPhotos();
     measure();
     grid.innerHTML = '';
 
-    list.forEach((photo) => {
-      const card = document.createElement('figure');
-      card.className = 'card';
-      card.dataset.w = photo.width;
-      card.dataset.h = photo.height;
-      card.style.gridRowEnd = `span ${spanFor(photo.width, photo.height)}`;
-
-      const img = document.createElement('img');
-      img.alt = photo.title || '';
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.src = photo.thumb;
-      img.addEventListener('load', () => {
-        img.classList.add('is-loaded');
-        card.classList.add('is-loaded-card');
-      });
-      // 加载失败也要去掉骨架，避免一直闪着
-      img.addEventListener('error', () => card.classList.add('is-loaded-card'));
-
-      const meta = document.createElement('figcaption');
-      meta.className = 'card-meta';
-      // 相机名与相册名各占一个胶囊标签；没有相机信息时只显示相册
-      const camera = photo.exif && photo.exif.camera;
-      const tags = [
-        camera ? `<span class="card-tag">${escapeHtml(camera)}</span>` : '',
-        `<span class="card-tag">${escapeHtml(photo.album)}</span>`,
-      ].join('');
-      meta.innerHTML = `<p class="card-title">${escapeHtml(photo.title)}</p>
-        <div class="card-tags">${tags}</div>`;
-
-      card.append(img, meta);
-      card.addEventListener('click', () => openLightbox(list.indexOf(photo)));
+    list.forEach((photo, index) => {
+      const card = createPhotoCard(photo, () => openLightbox(index, list), true);
       grid.appendChild(card);
 
       revealObserver.observe(card);
@@ -219,6 +273,41 @@
 
     // 元素高度变化后重新定位，避免出现空洞
     window.setTimeout(layout, 220);
+  }
+
+  function createPhotoCard(photo, onClick, masonry) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'card';
+    card.dataset.w = photo.width;
+    card.dataset.h = photo.height;
+    card.setAttribute('aria-label', `查看照片：${photo.title}，${photo.album}`);
+    if (masonry) card.style.gridRowEnd = `span ${spanFor(photo.width, photo.height)}`;
+
+    const img = document.createElement('img');
+    img.alt = photo.title || '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = photo.thumb;
+    img.addEventListener('load', () => {
+      img.classList.add('is-loaded');
+      card.classList.add('is-loaded-card');
+    });
+    img.addEventListener('error', () => card.classList.add('is-loaded-card'));
+
+    const meta = document.createElement('span');
+    meta.className = 'card-meta';
+    const camera = photo.exif && photo.exif.camera;
+    const tags = [
+      camera ? `<span class="card-tag">${escapeHtml(camera)}</span>` : '',
+      `<span class="card-tag">${escapeHtml(photo.album)}</span>`,
+    ].join('');
+    meta.innerHTML = `<span class="card-title">${escapeHtml(photo.title)}</span>
+      <span class="card-tags">${tags}</span>`;
+
+    card.append(img, meta);
+    card.addEventListener('click', onClick);
+    return card;
   }
 
   function measure() {
@@ -266,9 +355,9 @@
   let lbList = [];
   let lbIndex = 0;
 
-  function openLightbox(index) {
+  function openLightbox(index, list = currentPhotos()) {
     if (index < 0) return;
-    lbList = currentPhotos();
+    lbList = list;
     lbIndex = index;
     lightbox.hidden = false;
     document.body.classList.add('lb-open');

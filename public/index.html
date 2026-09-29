@@ -40,6 +40,34 @@
 
 <!-- 作品区 -->
 <main class="gallery-wrap" id="gallery">
+  <section class="gallery-section featured" id="featured" hidden>
+    <div class="section-heading">
+      <div>
+        <p class="section-label">精选</p>
+        <h2>近期想让你看到的作品</h2>
+      </div>
+      <a class="section-link" href="#allWork">浏览全部作品 <span aria-hidden="true">↓</span></a>
+    </div>
+    <div class="featured-grid" id="featuredGrid"></div>
+  </section>
+
+  <section class="gallery-section albums" id="albums" hidden>
+    <div class="section-heading">
+      <div>
+        <p class="section-label">系列</p>
+        <h2>按拍摄地点与时刻浏览</h2>
+      </div>
+    </div>
+    <div class="album-grid" id="albumGrid"></div>
+  </section>
+
+  <section class="all-work" id="allWork">
+    <div class="section-heading all-work-heading">
+      <div>
+        <p class="section-label">作品档案</p>
+        <h2>全部作品</h2>
+      </div>
+    </div>
   <div class="toolbar" id="toolbar">
     <div class="toolbar-inner">
       <div class="chips" id="chips"></div>
@@ -51,6 +79,7 @@
   </div>
 
   <div class="grid" id="grid"></div>
+  </section>
 
   <!-- 空状态 -->
   <div class="empty" id="empty" hidden>
@@ -72,6 +101,11 @@
       这里是我个人的摄影收藏，按拍摄批次整理成相册。<br />
       所有作品均为本人拍摄，请勿用于商业用途。
     </p>
+    <div class="contact" id="contact">
+      <p class="about-label">联系</p>
+      <p class="contact-text" id="contactIntro">欢迎就摄影、项目合作与交流来信。</p>
+      <div class="contact-links" id="contactLinks" hidden></div>
+    </div>
   </div>
 </section>
 
